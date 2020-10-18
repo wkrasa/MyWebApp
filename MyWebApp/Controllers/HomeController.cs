@@ -26,10 +26,13 @@ namespace MyWebApp.Controllers
             _filesService = filesService;
         }
 
-        public IActionResult Index(string message)
+        public async Task<IActionResult> Index(string message)
         {
             ViewBag.Message = message;
-            return View();
+
+            var files = await _filesService.GetList();
+
+            return View(files);
         }
 
         [HttpPost]
@@ -56,25 +59,30 @@ namespace MyWebApp.Controllers
             return RedirectToAction("Index", new { Message = $"File {file.FileName} uploaded" });
         }
 
-        //public async Task<IActionResult> Download(string filename)
-        //{
-        //    if (filename == null)
-        //    {
-        //        return Content("filename not present");
-        //    }
 
-        //    var path = Path.Combine(
-        //                   Directory.GetCurrentDirectory(),
-        //                   "wwwroot", filename);
+        public async Task<IActionResult> Delete(string filename)
+        {
+            if (filename == null)
+            {
+                return Content("filename not present");
+            }
 
-        //    var memory = new MemoryStream();
-        //    using (var stream = new FileStream(path, FileMode.Open))
-        //    {
-        //        await stream.CopyToAsync(memory);
-        //    }
-        //    memory.Position = 0;
-        //    return File(memory, GetContentType(path), Path.GetFileName(path));
-        //}
+            await _filesService.DeleteFile(filename);
+
+            return RedirectToAction("Index", new { Message = $"File {filename} deleted" });
+        }
+
+        public async Task<IActionResult> Download(string filename)
+        {
+            if (filename == null)
+            {
+                return Content("filename not present");
+            }
+
+            using var file = await  _filesService.DownloadFile(filename);
+
+            return File(file.ToArray(), "plain/text", filename);
+        }
 
         public IActionResult Privacy()
         {

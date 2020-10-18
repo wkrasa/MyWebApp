@@ -13,7 +13,9 @@ namespace MyWebApp.Infrastructure
 
         Task<IEnumerable<string>> GetList();
 
-        Task<Stream> DownloadFile(string fileName);
+        Task<MemoryStream> DownloadFile(string fileName);
+
+        Task DeleteFile(string fileName);
     }
 
     public class FilesService: IFilesService
@@ -38,7 +40,7 @@ namespace MyWebApp.Infrastructure
             return blobs.Select(x => x.Name);
         }
 
-        public async Task<Stream> DownloadFile(string fileName)
+        public async Task<MemoryStream> DownloadFile(string fileName)
         {
             var container = new BlobContainerClient(_connectionString, _contanerName);
 
@@ -47,6 +49,13 @@ namespace MyWebApp.Infrastructure
             var res = await container.GetBlobClient(fileName).DownloadToAsync(output);
 
             return output;
+        }
+
+        public async Task DeleteFile(string fileName)
+        {
+            var container = new BlobContainerClient(_connectionString, _contanerName);
+
+            await container.GetBlobClient(fileName).DeleteAsync();
         }
     }
 }
